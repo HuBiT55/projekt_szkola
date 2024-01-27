@@ -49,36 +49,55 @@ void clearScreen() {
     system("clear");
 }
 
+void displayGameInstructions() {
+    cout << "Witaj w Kółko i Krzyżyk!\n";
+    cout << "Instrukcja:\n";
+    cout << "1. Grasz przeciwko drugiemu graczowi (lub komputerowi).\n";
+    cout << "2. Wybierasz pole, wpisując numer rzędu (1-3) i kolumny (1-3).\n";
+    cout << "3. Celem gry jest ułożenie trzech swoich symboli w rzędzie, kolumnie lub na przekątnej.\n";
+    cout << "4. Wygrywasz, gdy ułożysz trzy swoje symbole w jednej linii lub plansza zostanie zapełniona.\n";
+    cout << "5. Powodzenia!\n";
+
+    cout << "Naciśnij Enter, aby rozpocząć...";
+    cin.ignore(); // Oczekaj na wciśnięcie Enter
+}
+
 void playTicTacToe() {
     char board[3][3] = { { ' ', ' ', ' ' }, { ' ', ' ', ' ' }, { ' ', ' ', ' ' } };
     char currentPlayer = 'X';
 
+    displayGameInstructions();
+
     do {
+        clearScreen();
         drawBoard(board);
 
         int row, col;
         cout << "Gracz " << currentPlayer << ", podaj rząd (1-3) i kolumnę (1-3): ";
-        cin >> row >> col;
-
-        if (row >= 1 && row <= 3 && col >= 1 && col <= 3 && board[row - 1][col - 1] == ' ') {
-            board[row - 1][col - 1] = currentPlayer;
-
-            if (checkWin(board, currentPlayer)) {
-                drawBoard(board);
-                cout << "Gracz " << currentPlayer << " wygrywa!\n";
-                break;
-            }
-
-            if (isBoardFull(board)) {
-                drawBoard(board);
-                cout << "Remis!\n";
-                break;
-            }
-
-            currentPlayer = (currentPlayer == 'X') ? 'O' : 'X'; // Zamień gracza
-        } else {
-            cout << "Nieprawidłowe pole. Spróbuj ponownie.\n";
+        
+        while (!(cin >> row >> col) || row < 1 || row > 3 || col < 1 || col > 3 || board[row - 1][col - 1] != ' ') {
+            cin.clear(); // Clear the error flag
+            cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Discard invalid input
+            cout << "Nieprawidłowe pole. Spróbuj ponownie: ";
         }
+
+        board[row - 1][col - 1] = currentPlayer;
+
+        if (checkWin(board, currentPlayer)) {
+            clearScreen();
+            drawBoard(board);
+            cout << "Gracz " << currentPlayer << " wygrywa!\n";
+            break;
+        }
+
+        if (isBoardFull(board)) {
+            clearScreen();
+            drawBoard(board);
+            cout << "Remis!\n";
+            break;
+        }
+
+        currentPlayer = (currentPlayer == 'X') ? 'O' : 'X'; // Zamień gracza
     } while (true);
 }
 
@@ -92,9 +111,105 @@ void playPingPong() {
     // implementacja funkcji...
 }
 
+struct Point {
+    int x;
+    int y;
+};
+
 // Tetris
 void playTetris() {
-    // implementacja funkcji...
+    cout << "Witaj w Tetrisie!\n";
+    cout << "Instrukcja:\n";
+    cout << "1. Użyj klawiszy 'a' i 'd' do poruszania klockiem w lewo i w prawo.\n";
+    cout << "2. Użyj klawisza 's' do przyspieszenia opadania klocka.\n";
+    cout << "3. Użyj klawiszy 'w' do obracania klocka.\n";
+    cout << "4. Graj dopóki klocki nie osiągną góry planszy.\n";
+    cout << "5. Powodzenia!\n";
+
+    cout << "Naciśnij Enter, aby rozpocząć...";
+    cin.ignore(); // Oczekaj na wciśnięcie Enter
+
+    const int BOARD_WIDTH = 10;
+    const int BOARD_HEIGHT = 20;
+
+    vector<vector<char>> board(BOARD_HEIGHT, vector<char>(BOARD_WIDTH, ' '));
+    vector<Point> currentPiece;
+
+    auto isValidMove = [&](int dx, int dy) {
+        for (const Point& point : currentPiece) {
+            int nx = point.x + dx;
+            int ny = point.y + dy;
+
+            if (nx < 0 || nx >= BOARD_WIDTH || ny < 0 || ny >= BOARD_HEIGHT || board[ny][nx] != ' ') {
+                return false;
+            }
+        }
+        return true;
+    };
+
+    auto placePiece = [&]() {
+        for (const Point& point : currentPiece) {
+            board[point.y][point.x] = '#';
+        }
+        currentPiece.clear();
+    };
+
+    auto clearLines = [&]() {
+        for (int i = BOARD_HEIGHT - 1; i >= 0; --i) {
+            if (all_of(board[i].begin(), board[i].end(), [](char c) { return c == '#'; })) {
+                board.erase(board.begin() + i);
+                board.insert(board.begin(), vector<char>(BOARD_WIDTH, ' '));
+            }
+        }
+    };
+
+    auto moveLinesDown = [&](int row) {
+        for (int i = row; i > 0; --i) {
+            for (int j = 0; j < BOARD_WIDTH; ++j) {
+                board[i][j] = board[i - 1][j];
+            }
+        }
+    };
+
+    auto isLineFull = [&](int row) {
+        return all_of(board[row].begin(), board[row].end(), [](char c) { return c == '#'; });
+    };
+
+    auto clearLine = [&](int row) {
+        fill(board[row].begin(), board[row].end(), ' ');
+    };
+
+    auto generateRandomPiece = [&]() {
+        return vector<Point>{{0, 0}, {1, 0}, {0, 1}, {1, 1}};
+    };
+
+    auto update = [&]() {
+        if (isValidMove(0, 1)) {
+            for (Point& point : currentPiece) {
+                point.y += 1;
+            }
+        } else {
+            placePiece();
+            clearLines();
+            currentPiece = generateRandomPiece();
+        }
+    };
+
+    auto drawBoard = [&]() {
+        for (int i = 0; i < BOARD_HEIGHT; ++i) {
+            for (int j = 0; j < BOARD_WIDTH; ++j) {
+                cout << board[i][j] << " ";
+            }
+            cout << "\n";
+        }
+    };
+
+    while (true) {
+        drawBoard();
+        update();
+        this_thread::sleep_for(chrono::milliseconds(500)); // Przerwa między krokami
+        system("clear");
+    }
 }
 
 // Wspólna funkcja dla gier
