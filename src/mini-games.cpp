@@ -49,55 +49,36 @@ void clearScreen() {
     system("clear");
 }
 
-void displayGameInstructions() {
-    cout << "Witaj w Kółko i Krzyżyk!\n";
-    cout << "Instrukcja:\n";
-    cout << "1. Grasz przeciwko drugiemu graczowi (lub komputerowi).\n";
-    cout << "2. Wybierasz pole, wpisując numer rzędu (1-3) i kolumny (1-3).\n";
-    cout << "3. Celem gry jest ułożenie trzech swoich symboli w rzędzie, kolumnie lub na przekątnej.\n";
-    cout << "4. Wygrywasz, gdy ułożysz trzy swoje symbole w jednej linii lub plansza zostanie zapełniona.\n";
-    cout << "5. Powodzenia!\n";
-
-    cout << "Naciśnij Enter, aby rozpocząć...";
-    cin.ignore(); // Oczekaj na wciśnięcie Enter
-}
-
 void playTicTacToe() {
     char board[3][3] = { { ' ', ' ', ' ' }, { ' ', ' ', ' ' }, { ' ', ' ', ' ' } };
     char currentPlayer = 'X';
 
-    displayGameInstructions();
-
     do {
-        clearScreen();
         drawBoard(board);
 
         int row, col;
         cout << "Gracz " << currentPlayer << ", podaj rząd (1-3) i kolumnę (1-3): ";
-        
-        while (!(cin >> row >> col) || row < 1 || row > 3 || col < 1 || col > 3 || board[row - 1][col - 1] != ' ') {
-            cin.clear(); // Clear the error flag
-            cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Discard invalid input
-            cout << "Nieprawidłowe pole. Spróbuj ponownie: ";
+        cin >> row >> col;
+
+        if (row >= 1 && row <= 3 && col >= 1 && col <= 3 && board[row - 1][col - 1] == ' ') {
+            board[row - 1][col - 1] = currentPlayer;
+
+            if (checkWin(board, currentPlayer)) {
+                drawBoard(board);
+                cout << "Gracz " << currentPlayer << " wygrywa!\n";
+                break;
+            }
+
+            if (isBoardFull(board)) {
+                drawBoard(board);
+                cout << "Remis!\n";
+                break;
+            }
+
+            currentPlayer = (currentPlayer == 'X') ? 'O' : 'X'; // Zamień gracza
+        } else {
+            cout << "Nieprawidłowe pole. Spróbuj ponownie.\n";
         }
-
-        board[row - 1][col - 1] = currentPlayer;
-
-        if (checkWin(board, currentPlayer)) {
-            clearScreen();
-            drawBoard(board);
-            cout << "Gracz " << currentPlayer << " wygrywa!\n";
-            break;
-        }
-
-        if (isBoardFull(board)) {
-            clearScreen();
-            drawBoard(board);
-            cout << "Remis!\n";
-            break;
-        }
-
-        currentPlayer = (currentPlayer == 'X') ? 'O' : 'X'; // Zamień gracza
     } while (true);
 }
 
