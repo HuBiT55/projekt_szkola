@@ -8,7 +8,12 @@
 
 using namespace std;
 
-// Kółko i krzyżyk
+// Function to clear the screen
+void clearScreen() {
+    cout << "\033[H\033[J";
+}
+
+// Tic-Tac-Toe
 void drawBoard(char board[3][3]) {
     cout << "  1 2 3\n";
     for (int i = 0; i < 3; ++i) {
@@ -23,14 +28,14 @@ void drawBoard(char board[3][3]) {
 bool checkWin(char board[3][3], char player) {
     for (int i = 0; i < 3; ++i) {
         if (board[i][0] == player && board[i][1] == player && board[i][2] == player)
-            return true; // Poziome
+            return true; // Horizontal
         if (board[0][i] == player && board[1][i] == player && board[2][i] == player)
-            return true; // Pionowe
+            return true; // Vertical
     }
     if (board[0][0] == player && board[1][1] == player && board[2][2] == player)
-        return true; // Przekątna
+        return true; // Diagonal
     if (board[0][2] == player && board[1][1] == player && board[2][0] == player)
-        return true; // Przekątna odwrotna
+        return true; // Reverse Diagonal
     return false;
 }
 
@@ -38,10 +43,10 @@ bool isBoardFull(char board[3][3]) {
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 3; ++j) {
             if (board[i][j] == ' ')
-                return false; // Istnieje puste pole
+                return false; // There is an empty space
         }
     }
-    return true; // Plansza jest pełna
+    return true; // The board is full
 }
 
 void playTicTacToe() {
@@ -49,55 +54,64 @@ void playTicTacToe() {
     char currentPlayer = 'X';
 
     do {
+        clearScreen();
         drawBoard(board);
 
         int row, col;
-        cout << "Gracz " << currentPlayer << ", podaj rząd (1-3) i kolumnę (1-3): ";
+        cout << "Player " << currentPlayer << ", enter row (1-3) and column (1-3): ";
         cin >> row >> col;
 
         if (row >= 1 && row <= 3 && col >= 1 && col <= 3 && board[row - 1][col - 1] == ' ') {
             board[row - 1][col - 1] = currentPlayer;
 
             if (checkWin(board, currentPlayer)) {
+                clearScreen();
                 drawBoard(board);
-                cout << "Gracz " << currentPlayer << " wygrywa!\n";
+                cout << "Player " << currentPlayer << " wins!\n";
+                cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+                cin.get();
                 break;
             }
 
             if (isBoardFull(board)) {
+                clearScreen();
                 drawBoard(board);
-                cout << "Remis!\n";
+                cout << "It's a draw!\n";
+                cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+                cin.get();
                 break;
             }
 
-            currentPlayer = (currentPlayer == 'X') ? 'O' : 'X'; // Zamień gracza
+            currentPlayer = (currentPlayer == 'X') ? 'O' : 'X'; // Switch players
         } else {
-            cout << "Nieprawidłowe pole. Spróbuj ponownie.\n";
+            cout << "Invalid move. Please try again.\n";
         }
     } while (true);
 }
 
-// Zgadywanie liczby
+// Number Guessing Game
 void playNumberGuessingGame() {
     srand(time(0));
 
     int targetNumber = rand() % 100 + 1;
     int guess, attempts = 0;
 
-    cout << "Zgadnij liczbę z zakresu 1-100.\n";
+    cout << "Guess the number between 1 and 100.\n";
 
     do {
-        cout << "Podaj swoją próbę: ";
+        cout << "Enter your guess: ";
         cin >> guess;
         attempts++;
 
         if (guess == targetNumber) {
-            cout << "Brawo! Zgadłeś liczbę " << targetNumber << " po " << attempts << " próbach.\n";
+            cout << "Congratulations! You guessed the number " << targetNumber << " in " << attempts << " attempts.\n";
+            cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+                cin.get();
             break;
         } else if (guess < targetNumber) {
-            cout << "Za mało. Spróbuj ponownie.\n";
+            cout << "Too low. Try again.\n";
         } else {
-            cout << "Za dużo. Spróbuj ponownie.\n";
+            cout << "Too high. Try again.\n";
         }
     } while (true);
 }
@@ -121,7 +135,7 @@ void playPingPong() {
     };
 
     auto draw = [&]() {
-        system("clear");
+        clearScreen();
 
         for (int i = 0; i < width + 2; i++)
             cout << "-";
@@ -221,7 +235,7 @@ void playTetris() {
     };
 
     auto draw = [&]() {
-        system("clear");
+        clearScreen();
 
         for (int i = 0; i < width + 2; i++)
             cout << "-";
@@ -345,41 +359,74 @@ int main() {
     int choice;
 
     do {
+        clearScreen();
         cout << "\n===== Game Hub =====\n";
-        cout << "1. Kółko i krzyżyk\n";
-        cout << "2. Zgadywanie liczby\n";
+        cout << "1. Tic-Tac-Toe\n";
+        cout << "2. Number Guessing Game\n";
         cout << "3. Ping Pong\n";
         cout << "4. Tetris\n";
-        cout << "5. Wyjście\n";
-        cout << "Wybierz grę (1-5): ";
+        cout << "5. Exit\n";
+        cout << "Choose a game (1-5): ";
         cin >> choice;
 
         switch (choice) {
             case 1:
-                // Kółko i krzyżyk
+                // Tic-Tac-Toe
                 clearScreen();
+                cout << "===== Tic-Tac-Toe =====\n";
+                cout << "Instructions:\n";
+                cout << "Enter the row (1-3) and column (1-3) to make a move.\n";
+                cout << "The game starts when you press enter.\n";
+                cout << "To exit the game at any time, type 'Q' and press enter.\n";
+                cout << "Press enter to start...";
+                cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+                cin.get();
                 playTicTacToe();
                 break;
             case 2:
-                // Zgadywanie liczby
+                // Number Guessing Game
                 clearScreen();
+                cout << "===== Number Guessing Game =====\n";
+                cout << "Instructions:\n";
+                cout << "Guess the number between 1 and 100.\n";
+                cout << "The game starts when you press enter.\n";
+                cout << "To exit the game at any time, type 'Q' and press enter.\n";
+                cout << "Press enter to start...";
+                cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+                cin.get();
                 playNumberGuessingGame();
                 break;
             case 3:
                 // Ping Pong
                 clearScreen();
+                cout << "===== Ping Pong =====\n";
+                cout << "Instructions:\n";
+                cout << "Use 'W' to move the paddle up, 'S' to move the paddle down.\n";
+                cout << "The game starts when you press enter.\n";
+                cout << "To exit the game at any time, type 'Q' and press enter.\n";
+                cout << "Press enter to start...";
+                cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+                cin.get();
                 playPingPong();
                 break;
             case 4:
                 // Tetris
                 clearScreen();
+                cout << "===== Tetris =====\n";
+                cout << "Instructions:\n";
+                cout << "Use 'A' to move the piece left, 'D' to move it right, 'S' to move it down, 'W' to rotate.\n";
+                cout << "The game starts when you press enter.\n";
+                cout << "To exit the game at any time, type 'Q' and press enter.\n";
+                cout << "Press enter to start...";
+                cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+                cin.get();
                 playTetris();
                 break;
             case 5:
-                cout << "Dziękujemy za korzystanie z Game Hub. Do zobaczenia!\n";
+                cout << "Thank you for using Game Hub. Goodbye!\n";
                 break;
             default:
-                cout << "Nieprawidłowy wybór. Spróbuj ponownie.\n";
+                cout << "Invalid choice. Please try again.\n";
         }
     } while (choice != 5);
 
