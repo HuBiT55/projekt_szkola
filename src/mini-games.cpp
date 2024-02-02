@@ -5,6 +5,7 @@
 #include <vector>
 #include <thread>
 #include <chrono>
+#include <limits>
 
 using namespace std;
 
@@ -49,6 +50,29 @@ bool isBoardFull(char board[3][3]) {
     return true; // The board is full
 }
 
+int getUserInput() {
+    int userInput;
+    while (true) {
+        cin >> ws; // Skip whitespaces
+        if (cin.peek() == 'q') {
+            cin.ignore(); // Consume 'q'
+            return -1; // Indicates quit
+        }
+
+        cin >> userInput;
+
+        if (cin.fail() || userInput < 1 || userInput > 3) {
+            cin.clear(); // clear input buffer to restore cin to a usable state
+            cin.ignore(numeric_limits<streamsize>::max(), '\n'); // ignore last input
+            cout << "Invalid input. Please enter a value between 1 and 3 or 'q' to quit.\n";
+        } else {
+            break;
+        }
+    }
+
+    return userInput;
+}
+
 void playTicTacToe() {
     char board[3][3] = { { ' ', ' ', ' ' }, { ' ', ' ', ' ' }, { ' ', ' ', ' ' } };
     char currentPlayer = 'X';
@@ -58,17 +82,30 @@ void playTicTacToe() {
         drawBoard(board);
 
         int row, col;
-        cout << "Player " << currentPlayer << ", enter row (1-3) and column (1-3): ";
-        cin >> row >> col;
+        cout << "Player " << currentPlayer << ", enter row (1-3): ";
+        row = getUserInput();
 
-        if (row >= 1 && row <= 3 && col >= 1 && col <= 3 && board[row - 1][col - 1] == ' ') {
+        if (row == -1) {
+            cout << "Game exited by the player.\n";
+            break;
+        }
+
+        cout << "Player " << currentPlayer << ", enter column (1-3): ";
+        col = getUserInput();
+
+        if (col == -1) {
+            cout << "Game exited by the player.\n";
+            break;
+        }
+
+        if (board[row - 1][col - 1] == ' ') {
             board[row - 1][col - 1] = currentPlayer;
 
             if (checkWin(board, currentPlayer)) {
                 clearScreen();
                 drawBoard(board);
                 cout << "Player " << currentPlayer << " wins!\n";
-                cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
                 cin.get();
                 break;
             }
@@ -77,7 +114,7 @@ void playTicTacToe() {
                 clearScreen();
                 drawBoard(board);
                 cout << "It's a draw!\n";
-                cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
                 cin.get();
                 break;
             }
@@ -90,6 +127,14 @@ void playTicTacToe() {
 }
 
 // Number Guessing Game
+bool isValidGuess(int guess) {
+    return (guess >= 1 && guess <= 100);
+}
+
+bool isQuitCommand(const string& input) {
+    return (input == "q" || input == "Q");
+}
+
 void playNumberGuessingGame() {
     srand(time(0));
 
@@ -100,18 +145,33 @@ void playNumberGuessingGame() {
 
     do {
         cout << "Enter your guess: ";
-        cin >> guess;
+        string userInput;
+        cin >> userInput;
+
+        if (isQuitCommand(userInput)) {
+            cout << "Game exited by the player.\n";
+            break;
+        }
+
+        // Convert user input to an integer
+        guess = atoi(userInput.c_str());
         attempts++;
 
-        if (guess == targetNumber) {
-            cout << "Congratulations! You guessed the number " << targetNumber << " in " << attempts << " attempts.\n";
-            cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        if (isValidGuess(guess)) {
+            if (guess == targetNumber) {
+                cout << "Congratulations! You guessed the number " << targetNumber << " in " << attempts << " attempts.\n";
+                cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
                 cin.get();
-            break;
-        } else if (guess < targetNumber) {
-            cout << "Too low. Try again.\n";
+                break;
+            } else if (guess < targetNumber) {
+                cout << "Too low. Try again.\n";
+            } else {
+                cout << "Too high. Try again.\n";
+            }
         } else {
-            cout << "Too high. Try again.\n";
+            cout << "Invalid input. Please enter a number between 1 and 100 (or 'q' to quit).\n";
+            cin.clear(); // Clear the error flag
+            cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Discard invalid input
         }
     } while (true);
 }
@@ -213,6 +273,13 @@ void playPingPong() {
 }
 
 // Tetris
+
+void generateRandomPiece(int piece[4][4]) {
+    // Implement logic to generate a random Tetris piece
+    // Example: Generating an L-shaped piece
+    piece[0][0] = 1; piece[0][1] = 1; piece[0][2] = 1; piece[0][3] = 1;
+}
+
 void playTetris() {
     const int width = 10;
     const int height = 20;
@@ -230,8 +297,8 @@ void playTetris() {
         currentX = width / 2;
         currentY = 0;
 
-        // Default Tetris piece (L-shaped)
-        currentPiece[0][0] = 1; currentPiece[0][1] = 1; currentPiece[0][2] = 1; currentPiece[0][3] = 1;
+        // Generate a new Tetris piece
+        generateRandomPiece(currentPiece);
     };
 
     auto draw = [&]() {
@@ -263,8 +330,10 @@ void playTetris() {
     auto isValidMove = [&]() {
         for (int i = 0; i < 4; i++)
             for (int j = 0; j < 4; j++)
-                if (currentPiece[i][j] == 1 && (board[i + currentY][j + currentX] != ' ' || j + currentX < 0 || j + currentX >= width || i + currentY >= height))
-                    return false;
+                if (currentPiece[i][j] == 1) {
+                    if (i + currentY >= height || j + currentX < 0 || j + currentX >= width || board[i + currentY][j + currentX] != ' ')
+                        return false;
+                }
         return true;
     };
 
@@ -307,18 +376,18 @@ void playTetris() {
         }
     };
 
-    auto update = [&]() {
+        auto update = [&]() {
         currentY++;
-
+    
         if (!isValidMove()) {
             currentY--;
-
+    
             // Place the piece on the board
             for (int i = 0; i < 4; i++)
                 for (int j = 0; j < 4; j++)
                     if (currentPiece[i][j] == 1)
                         board[i + currentY][j + currentX] = '#';
-
+    
             // Check for completed rows and clear them
             for (int i = height - 1; i >= 0; i--) {
                 bool isRowFull = true;
@@ -336,9 +405,11 @@ void playTetris() {
                         board[0][j] = ' ';
                 }
             }
-
-            // Generate a new piece
-            init();
+    
+            // Generate a new Tetris piece
+            generateRandomPiece(currentPiece);
+            currentX = width / 2;
+            currentY = 0;
         }
     };
 
@@ -347,6 +418,7 @@ void playTetris() {
             draw();
             input();
             update();
+            // Remove the condition to exit the loop after the first piece
             this_thread::sleep_for(chrono::milliseconds(500));
         }
     };
@@ -377,7 +449,7 @@ int main() {
                 cout << "Instructions:\n";
                 cout << "Enter the row (1-3) and column (1-3) to make a move.\n";
                 cout << "The game starts when you press enter.\n";
-                cout << "To exit the game at any time, type 'Q' and press enter.\n";
+                cout << "To exit the game at any time, type 'q' and press enter.\n";
                 cout << "Press enter to start...";
                 cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
                 cin.get();
@@ -390,7 +462,7 @@ int main() {
                 cout << "Instructions:\n";
                 cout << "Guess the number between 1 and 100.\n";
                 cout << "The game starts when you press enter.\n";
-                cout << "To exit the game at any time, type 'Q' and press enter.\n";
+                cout << "To exit the game at any time, type 'q' and press enter.\n";
                 cout << "Press enter to start...";
                 cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
                 cin.get();
@@ -403,7 +475,7 @@ int main() {
                 cout << "Instructions:\n";
                 cout << "Use 'W' to move the paddle up, 'S' to move the paddle down.\n";
                 cout << "The game starts when you press enter.\n";
-                cout << "To exit the game at any time, type 'Q' and press enter.\n";
+                cout << "To exit the game at any time, type 'q' and press enter.\n";
                 cout << "Press enter to start...";
                 cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
                 cin.get();
@@ -416,7 +488,7 @@ int main() {
                 cout << "Instructions:\n";
                 cout << "Use 'A' to move the piece left, 'D' to move it right, 'S' to move it down, 'W' to rotate.\n";
                 cout << "The game starts when you press enter.\n";
-                cout << "To exit the game at any time, type 'Q' and press enter.\n";
+                cout << "To exit the game at any time, type 'q' and press enter.\n";
                 cout << "Press enter to start...";
                 cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
                 cin.get();
