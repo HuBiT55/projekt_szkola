@@ -44,11 +44,6 @@ bool isBoardFull(char board[3][3]) {
     return true; // Plansza jest pełna
 }
 
-// Funkcja do czyszczenia ekranu
-void clearScreen() {
-    system("clear");
-}
-
 void playTicTacToe() {
     char board[3][3] = { { ' ', ' ', ' ' }, { ' ', ' ', ' ' }, { ' ', ' ', ' ' } };
     char currentPlayer = 'X';
@@ -84,125 +79,273 @@ void playTicTacToe() {
 
 // Zgadywanie liczby
 void playNumberGuessingGame() {
-    // implementacja funkcji...
+    srand(time(0));
+
+    int targetNumber = rand() % 100 + 1;
+    int guess, attempts = 0;
+
+    cout << "Zgadnij liczbę z zakresu 1-100.\n";
+
+    do {
+        cout << "Podaj swoją próbę: ";
+        cin >> guess;
+        attempts++;
+
+        if (guess == targetNumber) {
+            cout << "Brawo! Zgadłeś liczbę " << targetNumber << " po " << attempts << " próbach.\n";
+            break;
+        } else if (guess < targetNumber) {
+            cout << "Za mało. Spróbuj ponownie.\n";
+        } else {
+            cout << "Za dużo. Spróbuj ponownie.\n";
+        }
+    } while (true);
 }
 
 // Ping Pong
 void playPingPong() {
-    // implementacja funkcji...
-}
+    const int width = 20;
+    const int height = 10;
 
-struct Point {
-    int x;
-    int y;
-};
+    int ballX, ballY, paddle1Y, paddle2Y;
+    int ballSpeedX, ballSpeedY;
+    bool exitGame = false;
 
-// Tetris
-void playTetris() {
-    cout << "Witaj w Tetrisie!\n";
-    cout << "Instrukcja:\n";
-    cout << "1. Użyj klawiszy 'a' i 'd' do poruszania klockiem w lewo i w prawo.\n";
-    cout << "2. Użyj klawisza 's' do przyspieszenia opadania klocka.\n";
-    cout << "3. Użyj klawiszy 'w' do obracania klocka.\n";
-    cout << "4. Graj dopóki klocki nie osiągną góry planszy.\n";
-    cout << "5. Powodzenia!\n";
+    auto setup = [&]() {
+        ballX = width / 2;
+        ballY = height / 2;
+        paddle1Y = height / 2 - 2;
+        paddle2Y = height / 2 - 2;
+        ballSpeedX = -1;
+        ballSpeedY = 0;
+    };
 
-    cout << "Naciśnij Enter, aby rozpocząć...";
-    cin.ignore(); // Oczekaj na wciśnięcie Enter
+    auto draw = [&]() {
+        system("clear");
 
-    const int BOARD_WIDTH = 10;
-    const int BOARD_HEIGHT = 20;
+        for (int i = 0; i < width + 2; i++)
+            cout << "-";
+        cout << endl;
 
-    vector<vector<char>> board(BOARD_HEIGHT, vector<char>(BOARD_WIDTH, ' '));
-    vector<Point> currentPiece;
-
-    auto isValidMove = [&](int dx, int dy) {
-        for (const Point& point : currentPiece) {
-            int nx = point.x + dx;
-            int ny = point.y + dy;
-
-            if (nx < 0 || nx >= BOARD_WIDTH || ny < 0 || ny >= BOARD_HEIGHT || board[ny][nx] != ' ') {
-                return false;
+        for (int i = 0; i < height; i++) {
+            for (int j = 0; j < width; j++) {
+                if (j == 0)
+                    cout << "|";
+                if (i == ballY && j == ballX)
+                    cout << "O"; // Ball
+                else if (i >= paddle1Y && i < paddle1Y + 4 && j == 1)
+                    cout << "#"; // Left Paddle
+                else if (i >= paddle2Y && i < paddle2Y + 4 && j == width - 2)
+                    cout << "#"; // Right Paddle
+                else
+                    cout << " ";
+                if (j == width - 1)
+                    cout << "|";
             }
+            cout << endl;
         }
-        return true;
+
+        for (int i = 0; i < width + 2; i++)
+            cout << "-";
+        cout << endl;
     };
 
-    auto placePiece = [&]() {
-        for (const Point& point : currentPiece) {
-            board[point.y][point.x] = '#';
+    auto input = [&]() {
+        char ch;
+        cin >> ch;
+
+        switch (ch) {
+            case 'w':
+                paddle1Y = max(0, paddle1Y - 1);
+                break;
+            case 's':
+                paddle1Y = min(height - 4, paddle1Y + 1);
+                break;
+            case 'q':
+                exitGame = true;
+                break;
         }
-        currentPiece.clear();
-    };
-
-    auto clearLines = [&]() {
-        for (int i = BOARD_HEIGHT - 1; i >= 0; --i) {
-            if (all_of(board[i].begin(), board[i].end(), [](char c) { return c == '#'; })) {
-                board.erase(board.begin() + i);
-                board.insert(board.begin(), vector<char>(BOARD_WIDTH, ' '));
-            }
-        }
-    };
-
-    auto moveLinesDown = [&](int row) {
-        for (int i = row; i > 0; --i) {
-            for (int j = 0; j < BOARD_WIDTH; ++j) {
-                board[i][j] = board[i - 1][j];
-            }
-        }
-    };
-
-    auto isLineFull = [&](int row) {
-        return all_of(board[row].begin(), board[row].end(), [](char c) { return c == '#'; });
-    };
-
-    auto clearLine = [&](int row) {
-        fill(board[row].begin(), board[row].end(), ' ');
-    };
-
-    auto generateRandomPiece = [&]() {
-        return vector<Point>{{0, 0}, {1, 0}, {0, 1}, {1, 1}};
     };
 
     auto update = [&]() {
-        if (isValidMove(0, 1)) {
-            for (Point& point : currentPiece) {
-                point.y += 1;
-            }
-        } else {
-            placePiece();
-            clearLines();
-            currentPiece = generateRandomPiece();
+        ballX += ballSpeedX;
+        ballY += ballSpeedY;
+
+        if (ballY <= 0 || ballY >= height - 1)
+            ballSpeedY = -ballSpeedY;
+
+        if (ballX == 2 && ballY >= paddle1Y && ballY < paddle1Y + 4)
+            ballSpeedX = -ballSpeedX;
+
+        if (ballX == width - 3 && ballY >= paddle2Y && ballY < paddle2Y + 4)
+            ballSpeedX = -ballSpeedX;
+
+        if (ballX <= 0 || ballX >= width - 1) {
+            setup();
         }
     };
 
-    auto drawBoard = [&]() {
-        for (int i = 0; i < BOARD_HEIGHT; ++i) {
-            for (int j = 0; j < BOARD_WIDTH; ++j) {
-                cout << board[i][j] << " ";
-            }
-            cout << "\n";
+    auto gameLoop = [&]() {
+        while (!exitGame) {
+            draw();
+            input();
+            update();
+            this_thread::sleep_for(chrono::milliseconds(100));
         }
     };
 
-    while (true) {
-        drawBoard();
-        update();
-        this_thread::sleep_for(chrono::milliseconds(500)); // Przerwa między krokami
-        system("clear");
-    }
+    setup();
+    gameLoop();
 }
 
-// Wspólna funkcja dla gier
-void clearScreen() {
-    system("clear");
+// Tetris
+void playTetris() {
+    const int width = 10;
+    const int height = 20;
+
+    vector<vector<char>> board(height, vector<char>(width, ' '));
+    int currentPiece[4][4];
+    int currentX, currentY;
+    bool exitGame = false;
+
+    auto init = [&]() {
+        for (int i = 0; i < height; i++)
+            for (int j = 0; j < width; j++)
+                board[i][j] = ' ';
+
+        currentX = width / 2;
+        currentY = 0;
+
+        // Default Tetris piece (L-shaped)
+        currentPiece[0][0] = 1; currentPiece[0][1] = 1; currentPiece[0][2] = 1; currentPiece[0][3] = 1;
+    };
+
+    auto draw = [&]() {
+        system("clear");
+
+        for (int i = 0; i < width + 2; i++)
+            cout << "-";
+        cout << endl;
+
+        for (int i = 0; i < height; i++) {
+            for (int j = 0; j < width; j++) {
+                if (j == 0)
+                    cout << "|";
+                if (i >= currentY && i < currentY + 4 && j >= currentX && j < currentX + 4 && currentPiece[i - currentY][j - currentX] == 1)
+                    cout << "#"; // Tetris piece
+                else
+                    cout << board[i][j];
+                if (j == width - 1)
+                    cout << "|";
+            }
+            cout << endl;
+        }
+
+        for (int i = 0; i < width + 2; i++)
+            cout << "-";
+        cout << endl;
+    };
+
+    auto isValidMove = [&]() {
+        for (int i = 0; i < 4; i++)
+            for (int j = 0; j < 4; j++)
+                if (currentPiece[i][j] == 1 && (board[i + currentY][j + currentX] != ' ' || j + currentX < 0 || j + currentX >= width || i + currentY >= height))
+                    return false;
+        return true;
+    };
+
+    auto rotatePiece = [&]() {
+        int temp[4][4];
+
+        for (int i = 0; i < 4; i++)
+            for (int j = 0; j < 4; j++)
+                temp[i][j] = currentPiece[i][j];
+
+        for (int i = 0; i < 4; i++)
+            for (int j = 0; j < 4; j++)
+                currentPiece[i][j] = temp[3 - j][i];
+    };
+
+    auto input = [&]() {
+        char ch;
+        cin >> ch;
+
+        switch (ch) {
+            case 'a':
+                currentX--;
+                if (!isValidMove()) currentX++;
+                break;
+            case 'd':
+                currentX++;
+                if (!isValidMove()) currentX--;
+                break;
+            case 's':
+                currentY++;
+                if (!isValidMove()) currentY--;
+                break;
+            case 'w':
+                rotatePiece();
+                if (!isValidMove()) rotatePiece();
+                break;
+            case 'q':
+                exitGame = true;
+                break;
+        }
+    };
+
+    auto update = [&]() {
+        currentY++;
+
+        if (!isValidMove()) {
+            currentY--;
+
+            // Place the piece on the board
+            for (int i = 0; i < 4; i++)
+                for (int j = 0; j < 4; j++)
+                    if (currentPiece[i][j] == 1)
+                        board[i + currentY][j + currentX] = '#';
+
+            // Check for completed rows and clear them
+            for (int i = height - 1; i >= 0; i--) {
+                bool isRowFull = true;
+                for (int j = 0; j < width; j++) {
+                    if (board[i][j] == ' ') {
+                        isRowFull = false;
+                        break;
+                    }
+                }
+                if (isRowFull) {
+                    for (int k = i; k > 0; k--)
+                        for (int j = 0; j < width; j++)
+                            board[k][j] = board[k - 1][j];
+                    for (int j = 0; j < width; j++)
+                        board[0][j] = ' ';
+                }
+            }
+
+            // Generate a new piece
+            init();
+        }
+    };
+
+    auto gameLoop = [&]() {
+        while (!exitGame) {
+            draw();
+            input();
+            update();
+            this_thread::sleep_for(chrono::milliseconds(500));
+        }
+    };
+
+    init();
+    gameLoop();
 }
 
 int main() {
     int choice;
 
     do {
-        cout << "\n===== GameHub =====\n";
+        cout << "\n===== Game Hub =====\n";
         cout << "1. Kółko i krzyżyk\n";
         cout << "2. Zgadywanie liczby\n";
         cout << "3. Ping Pong\n";
@@ -217,7 +360,7 @@ int main() {
                 clearScreen();
                 playTicTacToe();
                 break;
-                        case 2:
+            case 2:
                 // Zgadywanie liczby
                 clearScreen();
                 playNumberGuessingGame();
